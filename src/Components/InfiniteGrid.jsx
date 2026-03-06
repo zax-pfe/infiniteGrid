@@ -11,13 +11,67 @@ function mod(n, m) {
 }
 export default function InfiniteGrid() {
   const offset = 1200;
+
+  // use to calculate the drag
+  const isDragging = useRef(false);
+  const lastY = useRef(0);
+  // const lastCoord = useRef({x: 0, y:0});
+
+  // used to do the request animation frame.
+  const requestRef = useRef();
+
+  // ref of the images
+  const elementRef = useRef([]);
+
+  // store initial positions
   const positions = useRef([
     { x: 100, y: 100 },
     { x: 500, y: 300 },
     { x: 900, y: 500 },
     { x: 1300, y: 200 },
   ]);
-  const elementRef = useRef([]);
+
+  const animate = (time) => {
+    // console.log("Animation en cours...", time);
+    // console.log(isDragging.current);
+    console.log(lastY.current);
+
+    requestRef.current = requestAnimationFrame(animate);
+  };
+
+  useEffect(() => {
+    requestRef.current = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(requestRef.current);
+  }, []); // [] assure que l'effet ne s'exécute qu'une fois au montage
+
+  useEffect(() => {
+    const handleMouseDown = (e) => {
+      isDragging.current = true;
+      lastY.current = e.clientY;
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDragging.current) return;
+
+      const deltaY = e.clientY - lastY.current;
+      lastY.current = e.clientY;
+    };
+
+    const handleMouseUp = () => {
+      isDragging.current = false;
+    };
+
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
 
   useLenis(({ velocity }) => {
     // console.log(positions.current[2].y);
@@ -39,16 +93,6 @@ export default function InfiniteGrid() {
       });
     }
   }, []);
-
-  // useEffect(() => {
-  //   const animate = () => {
-  //     animationFrameId = requestAnimationFrame(animate);
-  //   };
-
-  //   animationFrameId = requestAnimationFrame(animate);
-
-  //   return () => cancelAnimationFrame(animationFrameId);
-  // }, []);
 
   return (
     <div className={styles.infiniteGrid}>
