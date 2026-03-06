@@ -1,0 +1,13 @@
+.infiniteGrid {
+  background-color: slategrey;
+  height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+
+  .imageContainer {
+    position: absolute;
+    width: 300px;
+    height: 500px;
+  }
+}
