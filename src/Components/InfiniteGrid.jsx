@@ -25,10 +25,10 @@ export default function InfiniteGrid() {
 
   // store initial positions
   const positions = useRef([
-    { x: 100, y: 100 },
-    { x: 500, y: 300 },
+    { x: 100, y: 10 },
+    { x: 500, y: 1300 },
     { x: 900, y: 500 },
-    { x: 1300, y: 200 },
+    { x: 1300, y: 2000 },
   ]);
 
   const animate = (time) => {
