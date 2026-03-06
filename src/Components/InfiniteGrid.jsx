@@ -35,13 +35,18 @@ export default function InfiniteGrid() {
     // console.log("Animation en cours...", time);
     // console.log(isDragging.current);
     console.log(lastY.current);
+    for (const [index, el] of elementRef.current.entries()) {
+      gsap.set(el, {
+        x: positions.current[index].x,
+        y: positions.current[index].y,
+      });
+    }
 
     requestRef.current = requestAnimationFrame(animate);
   };
 
   useEffect(() => {
     requestRef.current = requestAnimationFrame(animate);
-
     return () => cancelAnimationFrame(requestRef.current);
   }, []); // [] assure que l'effet ne s'exécute qu'une fois au montage
 
@@ -74,8 +79,6 @@ export default function InfiniteGrid() {
   }, []);
 
   useLenis(({ velocity }) => {
-    // console.log(positions.current[2].y);
-
     for (const pos of positions.current) {
       let newY = pos.y + velocity * 0.3;
       pos.y =
@@ -84,13 +87,6 @@ export default function InfiniteGrid() {
           window.innerHeight + offset,
         ) -
         (window.innerHeight + offset) / 2;
-    }
-
-    for (const [index, el] of elementRef.current.entries()) {
-      gsap.set(el, {
-        x: positions.current[index].x,
-        y: positions.current[index].y,
-      });
     }
   }, []);
 
