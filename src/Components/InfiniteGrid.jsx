@@ -14,6 +14,10 @@ const CONFIG = {
   LERP: 0.08,
   OFFSET: 1200,
   SCROLL_MULTIPLIER: 0.6,
+  COLS: 5,
+  ROWS: 3,
+  GAP_X: 500,
+  GAP_Y: 700,
 };
 
 export default function InfiniteGrid() {
@@ -23,37 +27,25 @@ export default function InfiniteGrid() {
   const isDragging = useRef(false);
 
   const hasDragged = useRef(false);
-
-  const currentPosition = useRef({ x: 0, y: 0 });
-  const targetPosition = useRef({ x: 0, y: 0 });
   const lastMousePosition = useRef({ x: 0, y: 0 });
 
   const imageClickedRef = useRef(null);
-
-  const delta = useRef({ x: 0, y: 0 });
 
   // used to do the request animation frame.
   const requestRef = useRef();
 
   // ref of the images
   const elementRef = useRef([]);
-
-  // store initial positions
-  const COLS = 5;
-  const ROWS = 3;
-
-  const GAP_X = 500; // espace horizontal entre images
-  const GAP_Y = 700; // espace vertical
+  const gridRef = useRef(null);
 
   const positions = useRef(
-    Array.from({ length: COLS * ROWS }, (_, i) => {
-      const col = i % COLS;
-      const row = Math.floor(i / COLS);
+    Array.from({ length: CONFIG.COLS * CONFIG.ROWS }, (_, i) => {
+      const col = i % CONFIG.COLS;
+      const row = Math.floor(i / CONFIG.COLS);
 
       return {
-        x: col * GAP_X + Math.random() * 100 - 50 + 150 * row, // ajouter une variation aléatoire à la position x
-        y: row * GAP_Y + Math.random() * 100 - 50, // ajouter une variation aléatoire à la position y
-      };
+        x: col * CONFIG.GAP_X + Math.random() * 100 - 50 + 150 * row, 
+        y: row * CONFIG.GAP_Y + Math.random() * 100 - 50, 
     }),
   );
 
@@ -92,7 +84,7 @@ export default function InfiniteGrid() {
   useEffect(() => {
     requestRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(requestRef.current);
-  }, []); // [] assure que l'effet ne s'exécute qu'une fois au montage
+  }, []);
 
   useEffect(() => {
     console.log(`Image ${imageClicked} clicked`);
@@ -101,17 +93,20 @@ export default function InfiniteGrid() {
   useEffect(() => {
     const handleMouseDown = (e) => {
       isDragging.current = true;
+      gridRef.current?.classList.add(styles.dragging);
       lastMousePosition.current = { x: e.clientX, y: e.clientY };
       hasDragged.current = false;
-      if (imageClickedRef.current !== null) {
-        if (imageClicked !== imageClickedRef.current) {
-          setImageClicked(imageClickedRef.current);
-          imageClickedRef.current = null;
-        } else {
-          setImageClicked(null);
-          imageClickedRef.current = null;
-        }
-      }
+
+      // Ya trois log de image clicked -> prevent
+      // if (imageClickedRef.current !== null) {
+      //   if (imageClicked !== imageClickedRef.current) {
+      //     setImageClicked(imageClickedRef.current);
+      //     imageClickedRef.current = null;
+      //   } else {
+      //     setImageClicked(null);
+      //     imageClickedRef.current = null;
+      //   }
+      // }
     };
 
     const handleMouseMove = (e) => {
@@ -132,9 +127,7 @@ export default function InfiniteGrid() {
 
     const handleMouseUp = () => {
       isDragging.current = false;
-
-      // console.log("deltaY:", delta.current.y);
-      // console.log("deltaX:", delta.current.x);
+      gridRef.current?.classList.remove(styles.dragging);
     };
 
     window.addEventListener("mousedown", handleMouseDown);
@@ -155,12 +148,8 @@ export default function InfiniteGrid() {
     }
   }, []);
 
-  useEffect(() => {
-    console.log(`Image ${imageClicked} clicked`);
-  }, [imageClicked]);
-
   return (
-    <div className={styles.infiniteGrid}>
+    <div className={styles.infiniteGrid} ref={gridRef}>
       {imageList.map((image, index) => {
         return (
           <InfiniteGridElement
@@ -200,7 +189,6 @@ function InfiniteGridElement({
         draggable={false}
         onClick={() => {
           if (hasDragged.current) return;
-          console.log(`hasDragged: ${hasDragged.current}`);
           imageClickedRef.current = index;
           console.log(`Image ${imageClickedRef.current} clicked`);
         }}

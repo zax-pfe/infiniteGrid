@@ -4,6 +4,11 @@
   width: 100%;
   position: relative;
   overflow: hidden;
+  cursor: grab;
+
+  &.dragging {
+    cursor: grabbing;
+  }
 
   .imageContainer {
     position: absolute;
