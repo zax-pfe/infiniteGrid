@@ -44,8 +44,9 @@ export default function InfiniteGrid() {
       const row = Math.floor(i / CONFIG.COLS);
 
       return {
-        x: col * CONFIG.GAP_X + Math.random() * 100 - 50 + 150 * row, 
-        y: row * CONFIG.GAP_Y + Math.random() * 100 - 50, 
+        x: col * CONFIG.GAP_X + Math.random() * 100 - 50 + 150 * row,
+        y: row * CONFIG.GAP_Y + Math.random() * 100 - 50,
+      };
     }),
   );
 
