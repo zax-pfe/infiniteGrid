@@ -125,13 +125,14 @@ export default function InfiniteGrid() {
 
   useLenis(({ velocity }) => {
     for (const pos of positions.current) {
-      let newY = pos.y + velocity * 0.3;
-      pos.y =
-        mod(
-          newY + (window.innerHeight + CONFIG.OFFSET) / 2,
-          window.innerHeight + CONFIG.OFFSET,
-        ) -
-        (window.innerHeight + CONFIG.OFFSET) / 2;
+      // let newY = pos.y + velocity * 0.3;
+      // pos.y =
+      //   mod(
+      //     newY + (window.innerHeight + CONFIG.OFFSET) / 2,
+      //     window.innerHeight + CONFIG.OFFSET,
+      //   ) -
+      //   (window.innerHeight + CONFIG.OFFSET) / 2;
+      pos.targetY = (pos.targetY ?? pos.y) + velocity * 0.6;
     }
   }, []);
 
