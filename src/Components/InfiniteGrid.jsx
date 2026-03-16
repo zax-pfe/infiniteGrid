@@ -13,6 +13,7 @@ function mod(n, m) {
 const CONFIG = {
   LERP: 0.08,
   OFFSET: 1200,
+  SCROLL_MULTIPLIER: 0.6,
 };
 
 export default function InfiniteGrid() {
@@ -38,12 +39,23 @@ export default function InfiniteGrid() {
   const elementRef = useRef([]);
 
   // store initial positions
-  const positions = useRef([
-    { x: 100, y: 10 },
-    { x: 500, y: 1300 },
-    { x: 900, y: 500 },
-    { x: 1300, y: 2000 },
-  ]);
+  const COLS = 5;
+  const ROWS = 3;
+
+  const GAP_X = 500; // espace horizontal entre images
+  const GAP_Y = 700; // espace vertical
+
+  const positions = useRef(
+    Array.from({ length: COLS * ROWS }, (_, i) => {
+      const col = i % COLS;
+      const row = Math.floor(i / COLS);
+
+      return {
+        x: col * GAP_X + Math.random() * 100 - 50 + 150 * row, // ajouter une variation aléatoire à la position x
+        y: row * GAP_Y + Math.random() * 100 - 50, // ajouter une variation aléatoire à la position y
+      };
+    }),
+  );
 
   const lerp = (start, end, t) => start + (end - start) * t;
 
@@ -83,10 +95,23 @@ export default function InfiniteGrid() {
   }, []); // [] assure que l'effet ne s'exécute qu'une fois au montage
 
   useEffect(() => {
+    console.log(`Image ${imageClicked} clicked`);
+  }, [imageClicked]);
+
+  useEffect(() => {
     const handleMouseDown = (e) => {
       isDragging.current = true;
       lastMousePosition.current = { x: e.clientX, y: e.clientY };
       hasDragged.current = false;
+      if (imageClickedRef.current !== null) {
+        if (imageClicked !== imageClickedRef.current) {
+          setImageClicked(imageClickedRef.current);
+          imageClickedRef.current = null;
+        } else {
+          setImageClicked(null);
+          imageClickedRef.current = null;
+        }
+      }
     };
 
     const handleMouseMove = (e) => {
@@ -125,14 +150,8 @@ export default function InfiniteGrid() {
 
   useLenis(({ velocity }) => {
     for (const pos of positions.current) {
-      // let newY = pos.y + velocity * 0.3;
-      // pos.y =
-      //   mod(
-      //     newY + (window.innerHeight + CONFIG.OFFSET) / 2,
-      //     window.innerHeight + CONFIG.OFFSET,
-      //   ) -
-      //   (window.innerHeight + CONFIG.OFFSET) / 2;
-      pos.targetY = (pos.targetY ?? pos.y) + velocity * 0.6;
+      pos.targetY =
+        (pos.targetY ?? pos.y) + velocity * CONFIG.SCROLL_MULTIPLIER;
     }
   }, []);
 
