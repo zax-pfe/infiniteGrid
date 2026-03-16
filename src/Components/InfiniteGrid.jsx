@@ -9,13 +9,27 @@ import { ReactLenis, useLenis } from "lenis/react";
 function mod(n, m) {
   return ((n % m) + m) % m;
 }
+
+const CONFIG = {
+  LERP: 0.08,
+  OFFSET: 1200,
+};
+
 export default function InfiniteGrid() {
-  const offset = 1200;
+  const [imageClicked, setImageClicked] = useState(null);
 
   // use to calculate the drag
   const isDragging = useRef(false);
-  const lastY = useRef(0);
-  // const lastCoord = useRef({x: 0, y:0});
+
+  const hasDragged = useRef(false);
+
+  const currentPosition = useRef({ x: 0, y: 0 });
+  const targetPosition = useRef({ x: 0, y: 0 });
+  const lastMousePosition = useRef({ x: 0, y: 0 });
+
+  const imageClickedRef = useRef(null);
+
+  const delta = useRef({ x: 0, y: 0 });
 
   // used to do the request animation frame.
   const requestRef = useRef();
@@ -31,14 +45,32 @@ export default function InfiniteGrid() {
     { x: 1300, y: 2000 },
   ]);
 
+  const lerp = (start, end, t) => start + (end - start) * t;
+
   const animate = (time) => {
-    // console.log("Animation en cours...", time);
-    // console.log(isDragging.current);
-    console.log(lastY.current);
     for (const [index, el] of elementRef.current.entries()) {
+      const pos = positions.current[index];
+
+      pos.x = lerp(pos.x, pos.targetX ?? pos.x, CONFIG.LERP);
+      pos.y = lerp(pos.y, pos.targetY ?? pos.y, CONFIG.LERP);
+
+      let moduloX =
+        mod(
+          pos.x + (window.innerWidth + CONFIG.OFFSET) / 2,
+          window.innerWidth + CONFIG.OFFSET,
+        ) -
+        (window.innerWidth + CONFIG.OFFSET) / 2;
+
+      let moduloY =
+        mod(
+          pos.y + (window.innerHeight + CONFIG.OFFSET) / 2,
+          window.innerHeight + CONFIG.OFFSET,
+        ) -
+        (window.innerHeight + CONFIG.OFFSET) / 2;
+
       gsap.set(el, {
-        x: positions.current[index].x,
-        y: positions.current[index].y,
+        x: moduloX,
+        y: moduloY,
       });
     }
 
@@ -53,18 +85,31 @@ export default function InfiniteGrid() {
   useEffect(() => {
     const handleMouseDown = (e) => {
       isDragging.current = true;
-      lastY.current = e.clientY;
+      lastMousePosition.current = { x: e.clientX, y: e.clientY };
+      hasDragged.current = false;
     };
 
     const handleMouseMove = (e) => {
       if (!isDragging.current) return;
 
-      const deltaY = e.clientY - lastY.current;
-      lastY.current = e.clientY;
+      const dx = e.clientX - lastMousePosition.current.x;
+      const dy = e.clientY - lastMousePosition.current.y;
+
+      hasDragged.current = true;
+
+      lastMousePosition.current = { x: e.clientX, y: e.clientY };
+
+      for (const pos of positions.current) {
+        pos.targetX = (pos.targetX ?? pos.x) + dx;
+        pos.targetY = (pos.targetY ?? pos.y) + dy;
+      }
     };
 
     const handleMouseUp = () => {
       isDragging.current = false;
+
+      // console.log("deltaY:", delta.current.y);
+      // console.log("deltaX:", delta.current.x);
     };
 
     window.addEventListener("mousedown", handleMouseDown);
@@ -83,23 +128,29 @@ export default function InfiniteGrid() {
       let newY = pos.y + velocity * 0.3;
       pos.y =
         mod(
-          newY + (window.innerHeight + offset) / 2,
-          window.innerHeight + offset,
+          newY + (window.innerHeight + CONFIG.OFFSET) / 2,
+          window.innerHeight + CONFIG.OFFSET,
         ) -
-        (window.innerHeight + offset) / 2;
+        (window.innerHeight + CONFIG.OFFSET) / 2;
     }
   }, []);
+
+  useEffect(() => {
+    console.log(`Image ${imageClicked} clicked`);
+  }, [imageClicked]);
 
   return (
     <div className={styles.infiniteGrid}>
       {imageList.map((image, index) => {
         return (
           <InfiniteGridElement
-            key={index}
             src={imageList[index].src}
             alt={imageList[index].alt}
             index={index}
             elementRef={elementRef}
+            imageClickedRef={imageClickedRef}
+            hasDragged={hasDragged}
+            key={index}
           />
         );
       })}
@@ -107,13 +158,33 @@ export default function InfiniteGrid() {
   );
 }
 
-function InfiniteGridElement({ src, alt, index, elementRef }) {
+function InfiniteGridElement({
+  src,
+  alt,
+  index,
+  elementRef,
+  imageClickedRef,
+  hasDragged,
+}) {
   return (
     <div
       className={styles.imageContainer}
       ref={(el) => (elementRef.current[index] = el)}
     >
-      <Image src={src} alt={alt} fill priority style={{ objectFit: "cover" }} />
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        priority
+        style={{ objectFit: "cover", userSelect: "none" }}
+        draggable={false}
+        onClick={() => {
+          if (hasDragged.current) return;
+          console.log(`hasDragged: ${hasDragged.current}`);
+          imageClickedRef.current = index;
+          console.log(`Image ${imageClickedRef.current} clicked`);
+        }}
+      />
     </div>
   );
 }
