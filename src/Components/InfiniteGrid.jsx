@@ -5,6 +5,9 @@ import { imageList } from "@/data/data";
 import { useState, useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ReactLenis, useLenis } from "lenis/react";
+
+import { useGSAP } from "@gsap/react";
+
 // InfiniteGrid.jsx
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -29,10 +32,14 @@ export default function InfiniteGrid() {
   const hasDragged = useRef(false);
   const lastMousePosition = useRef({ x: 0, y: 0 });
 
-  const imageClickedRef = useRef(null);
+  const activeIndexRef = useRef(null);
+
+  const activeModalRef = useRef(false);
 
   // used to do the request animation frame.
   const requestRef = useRef();
+
+  const timelineRef = useRef();
 
   // ref of the images
   const elementRef = useRef([]);
@@ -54,6 +61,7 @@ export default function InfiniteGrid() {
 
   const animate = (time) => {
     for (const [index, el] of elementRef.current.entries()) {
+      if (index === activeIndexRef.current) continue;
       const pos = positions.current[index];
 
       pos.x = lerp(pos.x, pos.targetX ?? pos.x, CONFIG.LERP);
@@ -99,13 +107,13 @@ export default function InfiniteGrid() {
       hasDragged.current = false;
 
       // Ya trois log de image clicked -> prevent
-      // if (imageClickedRef.current !== null) {
-      //   if (imageClicked !== imageClickedRef.current) {
-      //     setImageClicked(imageClickedRef.current);
-      //     imageClickedRef.current = null;
+      // if (activeIndexRef.current !== null) {
+      //   if (imageClicked !== activeIndexRef.current) {
+      //     setImageClicked(activeIndexRef.current);
+      //     activeIndexRef.current = null;
       //   } else {
       //     setImageClicked(null);
-      //     imageClickedRef.current = null;
+      //     activeIndexRef.current = null;
       //   }
       // }
     };
@@ -149,6 +157,27 @@ export default function InfiniteGrid() {
     }
   }, []);
 
+  const click = (index) => {
+    const el = elementRef.current[index];
+
+    timelineRef.current = gsap.timeline();
+
+    timelineRef.current.to(el, {
+      x: 400,
+      y: 400,
+      opacity: 1,
+      scale: 1.3,
+      duration: 0.6,
+      ease: "power2.inOut",
+    });
+
+    timelineRef.current.play();
+  };
+
+  const closeModal = () => {
+    timelineRef.current.reverse();
+  };
+
   return (
     <div className={styles.infiniteGrid} ref={gridRef}>
       {imageList.map((image, index) => {
@@ -158,7 +187,10 @@ export default function InfiniteGrid() {
             alt={imageList[index].alt}
             index={index}
             elementRef={elementRef}
-            imageClickedRef={imageClickedRef}
+            activeIndexRef={activeIndexRef}
+            activeModalRef={activeModalRef}
+            click={click}
+            closeModal={closeModal}
             hasDragged={hasDragged}
             key={index}
           />
@@ -173,9 +205,16 @@ function InfiniteGridElement({
   alt,
   index,
   elementRef,
-  imageClickedRef,
+  activeIndexRef,
+  activeModalRef,
+  click,
+  closeModal,
   hasDragged,
 }) {
+  function toggleAciveModal() {
+    activeModalRef.current = !activeModalRef.current;
+  }
+
   return (
     <div
       className={styles.imageContainer}
@@ -190,8 +229,14 @@ function InfiniteGridElement({
         draggable={false}
         onClick={() => {
           if (hasDragged.current) return;
-          imageClickedRef.current = index;
-          console.log(`Image ${imageClickedRef.current} clicked`);
+          activeIndexRef.current = index;
+          activeModalRef.current = true;
+          console.log(`Image ${activeIndexRef.current} clicked`);
+          click(index);
+          toggleAciveModal();
+          if (activeModalRef.current) {
+            closeModal();
+          }
         }}
       />
     </div>
