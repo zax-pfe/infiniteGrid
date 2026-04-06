@@ -177,8 +177,13 @@ export default function InfiniteGrid() {
     const handleMouseMove = (e) => {
       if (!isDragging.current) return;
 
-      const dx = e.clientX - lastMousePosition.current.x;
-      const dy = e.clientY - lastMousePosition.current.y;
+      var dx = e.clientX - lastMousePosition.current.x;
+      var dy = e.clientY - lastMousePosition.current.y;
+
+      if (activeIndexRef.current !== null) {
+        dx = 0;
+        dy = 0;
+      }
 
       hasDragged.current = true;
 
