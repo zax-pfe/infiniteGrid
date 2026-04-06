@@ -204,54 +204,97 @@ export default function InfiniteGrid() {
   }, []);
 
   // ______________________ CLICK ANIMATION ______________________//
+  // const clickImage = (index) => {
+  //   activeModalRef.current = true;
+  //   const el = elementRef.current[index];
+  //   const { x, y } = el.getBoundingClientRect();
+  //   console.log(`Element ${index} position: x=${x}, y=${y}`);
+  //   previousposition.current = { x, y };
+
+  //   timelineRef.current = gsap.timeline();
+
+  //   timelineRef.current.to(el, {
+  //     x: windowSize.current.width / 2 - CONFIG.IMAGE_WIDTH / 2,
+  //     y: windowSize.current.height / 2 - CONFIG.IMAGE_HEIGHT / 2,
+  //     scale: 1.3,
+  //     duration: 0.6,
+  //     ease: "power3.inOut",
+  //     zIndex: 1000,
+  //   });
+
+  //   timelineRef.current.play();
+  // };
+
   const clickImage = (index) => {
-    activeModalRef.current = true;
     const el = elementRef.current[index];
-    const { x, y } = el.getBoundingClientRect();
-    console.log(`Element ${index} position: x=${x}, y=${y}`);
-    previousposition.current = { x, y };
 
-    timelineRef.current = gsap.timeline();
+    // 1. FIRST → capture state
+    const state = Flip.getState(el);
 
-    timelineRef.current.to(el, {
-      x: windowSize.current.width / 2 - CONFIG.IMAGE_WIDTH / 2,
-      y: windowSize.current.height / 2 - CONFIG.IMAGE_HEIGHT / 2,
-      scale: 1.3,
-      duration: 0.6,
+    // 2. LAST → move element in DOM
+    overlayRef.current.appendChild(el);
+
+    activeModalRef.current = true;
+
+    // 3. PLAY → animate
+    Flip.from(state, {
+      duration: 0.7,
       ease: "power3.inOut",
+      scale: true,
+      absolute: true,
+      nested: true,
       zIndex: 1000,
     });
-
-    timelineRef.current.play();
   };
 
   const unclickImage = (index) => {
     const el = elementRef.current[index];
-    timelineRef.current = gsap.timeline();
+    const grid = gridRef.current;
 
-    timelineRef.current.to(el, {
-      x: previousposition.current.x,
-      y: previousposition.current.y,
-      scale: 1,
-      duration: 0.6,
+    const state = Flip.getState(el);
+
+    // move back to grid
+    grid.appendChild(el);
+
+    Flip.from(state, {
+      duration: 0.7,
       ease: "power3.inOut",
+      scale: true,
+      absolute: true,
+      nested: true,
     });
 
-    timelineRef.current.play();
-    timelineRef.current.eventCallback("onComplete", () => {
-      activeIndexRef.current = null;
-      elementRef.current[index].style.zIndex = "";
-      activeModalRef.current = false;
-      activeIndexRef.current = null;
-    });
-    previousposition.current = { x: 0, y: 0 };
+    activeModalRef.current = false;
+    activeIndexRef.current = null;
   };
+
+  // const unclickImage = (index) => {
+  //   const el = elementRef.current[index];
+  //   timelineRef.current = gsap.timeline();
+
+  //   timelineRef.current.to(el, {
+  //     x: previousposition.current.x,
+  //     y: previousposition.current.y,
+  //     scale: 1,
+  //     duration: 0.6,
+  //     ease: "power3.inOut",
+  //   });
+
+  //   timelineRef.current.play();
+  //   timelineRef.current.eventCallback("onComplete", () => {
+  //     activeIndexRef.current = null;
+  //     elementRef.current[index].style.zIndex = "";
+  //     activeModalRef.current = false;
+  //     activeIndexRef.current = null;
+  //   });
+  //   previousposition.current = { x: 0, y: 0 };
+  // };
 
   return (
     <div className={styles.container}>
       <div className={styles.close}>X</div>
       <div className={styles.overlay}>
-        <div className={styles.overlayImage}></div>
+        <div className={styles.overlayImage} ref={overlayRef}></div>
       </div>
       <div className={styles.infiniteGrid} ref={gridRef}>
         {imageList.map((image, index) => {
