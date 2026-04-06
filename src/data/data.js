@@ -14,4 +14,13 @@ export const imageList = [
   { src: "/images/13.jpg", alt: "Image 13" },
   { src: "/images/14.jpg", alt: "Image 14" },
   { src: "/images/15.jpg", alt: "Image 15" },
+  { src: "/images/9.jpg", alt: "Image 16" },
+  { src: "/images/10.jpg", alt: "Image 17" },
+  { src: "/images/11.jpg", alt: "Image 18" },
+  { src: "/images/5.jpg", alt: "Image 19" },
+  { src: "/images/6.jpg", alt: "Image 20" },
+  { src: "/images/7.jpg", alt: "Image 21" },
+  { src: "/images/1.jpg", alt: "Image 22" },
+  { src: "/images/2.jpg", alt: "Image 23" },
+  { src: "/images/3.jpg", alt: "Image 24" },
 ];

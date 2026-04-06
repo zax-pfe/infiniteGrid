@@ -1,10 +1,11 @@
-import React, { useEffect } from "react";
+import React, { act, useEffect } from "react";
 import styles from "./style.module.scss";
 import Image from "next/image";
 import { imageList } from "@/data/data";
 import { useState, useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ReactLenis, useLenis } from "lenis/react";
+import { useStore } from "../store/store.js";
 
 import { useGSAP } from "@gsap/react";
 
@@ -17,29 +18,42 @@ const CONFIG = {
   LERP: 0.08,
   OFFSET: 1200,
   SCROLL_MULTIPLIER: 0.6,
-  COLS: 5,
+  COLS: 8,
   ROWS: 3,
   GAP_X: 500,
   GAP_Y: 700,
+  IMAGE_HEIGHT: 500,
+  IMAGE_WIDTH: 300,
 };
 
 export default function InfiniteGrid() {
   const [imageClicked, setImageClicked] = useState(null);
 
+  const canvasDimmensions = useRef({
+    width: CONFIG.COLS * CONFIG.GAP_X,
+    height: CONFIG.ROWS * CONFIG.GAP_Y,
+  });
+
+  const windowSize = useRef({
+    width: typeof window !== "undefined" ? window.innerWidth : null,
+    height: typeof window !== "undefined" ? window.innerHeight : null,
+  });
+
   // use to calculate the drag
   const isDragging = useRef(false);
-
   const hasDragged = useRef(false);
   const lastMousePosition = useRef({ x: 0, y: 0 });
 
+  // used to know which image is active
   const activeIndexRef = useRef(null);
-
   const activeModalRef = useRef(false);
 
   // used to do the request animation frame.
   const requestRef = useRef();
 
+  // used to do the animation on click
   const timelineRef = useRef();
+  const previousposition = useRef({ x: 0, y: 0 });
 
   // ref of the images
   const elementRef = useRef([]);
@@ -53,51 +67,78 @@ export default function InfiniteGrid() {
       return {
         x: col * CONFIG.GAP_X + Math.random() * 100 - 50 + 150 * row,
         y: row * CONFIG.GAP_Y + Math.random() * 100 - 50,
+        // x: col * CONFIG.GAP_X + Math.random(),
+        // y: row * CONFIG.GAP_Y + Math.random(),
       };
     }),
   );
 
+  // function centerGrid() {
+  //   const gridWidth = canvasDimmensions.current.width;
+  //   const gridHeight = canvasDimmensions.current.height;
+  //   const windowWidth = window.innerWidth;
+  //   const windowHeight = window.innerHeight;
+  //   const centerX = (windowWidth - gridWidth) / 2;
+  //   const centerY = (windowHeight - gridHeight) / 2;
+  //   gsap.set(gridRef.current, { x: centerX, y: centerY });
+  // }
+  // useEffect(() => {
+  //   if (typeof window === "undefined") return;
+  //   const onResize = () => centerGrid();
+  //   centerGrid();
+  //   window.addEventListener("resize", onResize);
+  //   return () => window.removeEventListener("resize", onResize);
+  // }, []);
+
   const lerp = (start, end, t) => start + (end - start) * t;
 
-  const animate = (time) => {
-    for (const [index, el] of elementRef.current.entries()) {
-      if (index === activeIndexRef.current) continue;
-      const pos = positions.current[index];
-
-      pos.x = lerp(pos.x, pos.targetX ?? pos.x, CONFIG.LERP);
-      pos.y = lerp(pos.y, pos.targetY ?? pos.y, CONFIG.LERP);
-
-      let moduloX =
-        mod(
-          pos.x + (window.innerWidth + CONFIG.OFFSET) / 2,
-          window.innerWidth + CONFIG.OFFSET,
-        ) -
-        (window.innerWidth + CONFIG.OFFSET) / 2;
-
-      let moduloY =
-        mod(
-          pos.y + (window.innerHeight + CONFIG.OFFSET) / 2,
-          window.innerHeight + CONFIG.OFFSET,
-        ) -
-        (window.innerHeight + CONFIG.OFFSET) / 2;
-
-      gsap.set(el, {
-        x: moduloX,
-        y: moduloY,
-      });
-    }
-
-    requestRef.current = requestAnimationFrame(animate);
-  };
+  // ______________________ RAF LOOP ______________________//
 
   useEffect(() => {
+    const animate = () => {
+      if (activeIndexRef.current === null && !activeModalRef.current) {
+        for (const [index, el] of elementRef.current.entries()) {
+          const pos = positions.current[index];
+
+          if (!el || !pos) continue;
+
+          pos.x = lerp(pos.x, pos.targetX ?? pos.x, CONFIG.LERP);
+          pos.y = lerp(pos.y, pos.targetY ?? pos.y, CONFIG.LERP);
+
+          const moduloX =
+            mod(
+              pos.x + canvasDimmensions.current.width / 2,
+              canvasDimmensions.current.width,
+            ) -
+            canvasDimmensions.current.width / 2;
+
+          const moduloY =
+            mod(
+              pos.y + canvasDimmensions.current.height / 2,
+              canvasDimmensions.current.height,
+            ) -
+            canvasDimmensions.current.height / 2;
+
+          gsap.set(el, {
+            x: moduloX,
+            y: moduloY,
+          });
+        }
+      }
+
+      requestRef.current = requestAnimationFrame(animate);
+    };
+
     requestRef.current = requestAnimationFrame(animate);
+
     return () => cancelAnimationFrame(requestRef.current);
   }, []);
 
   useEffect(() => {
     console.log(`Image ${imageClicked} clicked`);
   }, [imageClicked]);
+
+  // ______________________ DRAGGING  ______________________//
 
   useEffect(() => {
     const handleMouseDown = (e) => {
@@ -150,6 +191,8 @@ export default function InfiniteGrid() {
     };
   }, []);
 
+  // ______________________ SCROLLING ______________________//
+
   useLenis(({ velocity }) => {
     for (const pos of positions.current) {
       pos.targetY =
@@ -157,45 +200,74 @@ export default function InfiniteGrid() {
     }
   }, []);
 
-  const click = (index) => {
+  // ______________________ CLICK ANIMATION ______________________//
+  const clickImage = (index) => {
+    activeModalRef.current = true;
     const el = elementRef.current[index];
+    const { x, y } = el.getBoundingClientRect();
+    console.log(`Element ${index} position: x=${x}, y=${y}`);
+    previousposition.current = { x, y };
 
     timelineRef.current = gsap.timeline();
 
     timelineRef.current.to(el, {
-      x: 400,
-      y: 400,
-      opacity: 1,
+      x: windowSize.current.width / 2 - CONFIG.IMAGE_WIDTH / 2,
+      y: windowSize.current.height / 2 - CONFIG.IMAGE_HEIGHT / 2,
       scale: 1.3,
       duration: 0.6,
-      ease: "power2.inOut",
+      ease: "power3.inOut",
+      zIndex: 1000,
     });
 
     timelineRef.current.play();
   };
 
-  const closeModal = () => {
-    timelineRef.current.reverse();
+  const unclickImage = (index) => {
+    const el = elementRef.current[index];
+    timelineRef.current = gsap.timeline();
+
+    timelineRef.current.to(el, {
+      x: previousposition.current.x,
+      y: previousposition.current.y,
+      scale: 1,
+      duration: 0.6,
+      ease: "power3.inOut",
+    });
+
+    timelineRef.current.play();
+    timelineRef.current.eventCallback("onComplete", () => {
+      activeIndexRef.current = null;
+      elementRef.current[index].style.zIndex = "";
+      activeModalRef.current = false;
+      activeIndexRef.current = null;
+    });
+    previousposition.current = { x: 0, y: 0 };
   };
 
   return (
-    <div className={styles.infiniteGrid} ref={gridRef}>
-      {imageList.map((image, index) => {
-        return (
-          <InfiniteGridElement
-            src={imageList[index].src}
-            alt={imageList[index].alt}
-            index={index}
-            elementRef={elementRef}
-            activeIndexRef={activeIndexRef}
-            activeModalRef={activeModalRef}
-            click={click}
-            closeModal={closeModal}
-            hasDragged={hasDragged}
-            key={index}
-          />
-        );
-      })}
+    <div className={styles.container}>
+      <div className={styles.close}>X</div>
+      <div className={styles.overlay}>
+        <div className={styles.imageContainer}></div>
+      </div>
+      <div className={styles.infiniteGrid} ref={gridRef}>
+        {imageList.map((image, index) => {
+          return (
+            <InfiniteGridElement
+              src={imageList[index].src}
+              alt={imageList[index].alt}
+              index={index}
+              elementRef={elementRef}
+              activeIndexRef={activeIndexRef}
+              activeModalRef={activeModalRef}
+              click={clickImage}
+              closeModal={unclickImage}
+              hasDragged={hasDragged}
+              key={index}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -215,6 +287,8 @@ function InfiniteGridElement({
     activeModalRef.current = !activeModalRef.current;
   }
 
+  const setActiveItem = useStore((state) => state.setActiveItem);
+
   return (
     <div
       className={styles.imageContainer}
@@ -224,21 +298,39 @@ function InfiniteGridElement({
         src={src}
         alt={alt}
         fill
+        sizes="300px"
         priority
         style={{ objectFit: "cover", userSelect: "none" }}
         draggable={false}
         onClick={() => {
           if (hasDragged.current) return;
           activeIndexRef.current = index;
-          activeModalRef.current = true;
+          // activeModalRef.current = true;
           console.log(`Image ${activeIndexRef.current} clicked`);
-          click(index);
-          toggleAciveModal();
           if (activeModalRef.current) {
-            closeModal();
+            closeModal(index);
+            setActiveItem(null);
+            return;
           }
+          click(index);
+          // toggleAciveModal();
+          setActiveItem(index);
+
+          // if (activeModalRef.current) {
+          //   closeModal();
+          // }
         }}
       />
     </div>
   );
 }
+
+// Clean tout le code du click qui a été fait.
+// Quand un utilisateur clique sur une image
+// Faire apparaitre le fondu blanc et changer le z index de l'image au max
+// Positionner cette image au centre de l'ecran
+// deactiver le scroll et le drag
+// afficher une croix pour fermer le modal
+// Quand l'utilisateur clique sur la croix
+// remettre l'image à sa position initiale
+// reactiver le scroll et le drag
