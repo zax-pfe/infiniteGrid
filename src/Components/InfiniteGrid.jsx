@@ -62,6 +62,18 @@ export default function InfiniteGrid() {
   const elementRef = useRef([]);
   const gridRef = useRef(null);
 
+  // ______________________ PREVENT DEFAULT DRAGGING ______________________//
+
+  useEffect(() => {
+    const preventDrag = (e) => e.preventDefault();
+
+    window.addEventListener("dragstart", preventDrag);
+
+    return () => {
+      window.removeEventListener("dragstart", preventDrag);
+    };
+  }, []);
+
   const positions = useRef(
     Array.from({ length: CONFIG.COLS * CONFIG.ROWS }, (_, i) => {
       const col = i % CONFIG.COLS;
@@ -197,9 +209,11 @@ export default function InfiniteGrid() {
   // ______________________ SCROLLING ______________________//
 
   useLenis(({ velocity }) => {
-    for (const pos of positions.current) {
-      pos.targetY =
-        (pos.targetY ?? pos.y) + velocity * CONFIG.SCROLL_MULTIPLIER;
+    if (activeIndexRef.current === null) {
+      for (const pos of positions.current) {
+        pos.targetY =
+          (pos.targetY ?? pos.y) + velocity * CONFIG.SCROLL_MULTIPLIER;
+      }
     }
   }, []);
 
@@ -250,9 +264,9 @@ export default function InfiniteGrid() {
   return (
     <div className={styles.container}>
       <div className={styles.close}>X</div>
-      <div className={styles.overlay}>
+      {/* <div className={styles.overlay}>
         <div className={styles.overlayImage}></div>
-      </div>
+      </div> */}
       <div className={styles.infiniteGrid} ref={gridRef}>
         {imageList.map((image, index) => {
           return (
@@ -305,6 +319,7 @@ function InfiniteGridElement({
         priority
         style={{ objectFit: "cover", userSelect: "none" }}
         draggable={false}
+        onDragStart={(e) => e.preventDefault()}
         onClick={() => {
           if (hasDragged.current) return;
           activeIndexRef.current = index;
@@ -337,3 +352,8 @@ function InfiniteGridElement({
 // Quand l'utilisateur clique sur la croix
 // remettre l'image à sa position initiale
 // reactiver le scroll et le drag
+
+// quand une image est cliquée, on blouqe le drag et le scroll
+// mais on stocke la position des targets qaund meme et on la met a jour.
+// quand l'utilisatuer clique pour fermer le modal,
+// la grille se deplace suivant ce qui a été scrollé ou drag pendant que le modal était ouvert,
