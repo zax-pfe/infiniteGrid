@@ -21,6 +21,27 @@
     z-index: 10;
   }
 
+  .overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 30%;
+    height: 100%;
+    background-color: rgba(148, 30, 30, 1);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    .overlayImage {
+      height: 500px;
+      width: 300px;
+      background-color: white;
+      position: relative;
+    }
+  }
+
   .infiniteGrid {
     background-color: slategrey;
     height: 100%;

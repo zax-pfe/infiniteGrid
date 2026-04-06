@@ -8,6 +8,8 @@ import { ReactLenis, useLenis } from "lenis/react";
 import { useStore } from "../store/store.js";
 
 import { useGSAP } from "@gsap/react";
+import { Flip } from "gsap/Flip";
+gsap.registerPlugin(Flip);
 
 // InfiniteGrid.jsx
 function mod(n, m) {
@@ -54,6 +56,7 @@ export default function InfiniteGrid() {
   // used to do the animation on click
   const timelineRef = useRef();
   const previousposition = useRef({ x: 0, y: 0 });
+  const overlayRef = useRef(null);
 
   // ref of the images
   const elementRef = useRef([]);
@@ -248,7 +251,7 @@ export default function InfiniteGrid() {
     <div className={styles.container}>
       <div className={styles.close}>X</div>
       <div className={styles.overlay}>
-        <div className={styles.imageContainer}></div>
+        <div className={styles.overlayImage}></div>
       </div>
       <div className={styles.infiniteGrid} ref={gridRef}>
         {imageList.map((image, index) => {
