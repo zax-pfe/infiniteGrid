@@ -1,9 +1,14 @@
 import "@/styles/globals.css";
 import { ReactLenis } from "lenis/react";
+import { useRouter } from "next/router";
 
 export default function App({ Component, pageProps }) {
-  return (
-    <>
+  const router = useRouter();
+
+  const isHomePage = router.pathname === "/";
+
+  if (isHomePage) {
+    return (
       <ReactLenis
         root
         options={{
@@ -13,6 +18,8 @@ export default function App({ Component, pageProps }) {
       >
         <Component {...pageProps} />
       </ReactLenis>
-    </>
-  );
+    );
+  }
+
+  return <Component {...pageProps} />;
 }

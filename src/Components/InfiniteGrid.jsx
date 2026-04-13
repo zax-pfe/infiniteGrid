@@ -235,7 +235,7 @@ export default function InfiniteGrid() {
     timelineRef.current.to(el, {
       x: windowSize.current.width / 2 - CONFIG.IMAGE_WIDTH / 2,
       y: windowSize.current.height / 2 - CONFIG.IMAGE_HEIGHT / 2,
-      scale: 1.3,
+      scale: 1.8,
       duration: 0.6,
       ease: "power3.inOut",
       zIndex: 1000,
