@@ -15,36 +15,39 @@ const imageList = [
 export default function Index() {
   const elementContainerRef = useRef([]);
   const elementImagesRef = useRef([]);
-  const timeLineRef = useRef();
-
+  const isAnimatingRef = useRef(false);
   const [activeIndex, setActiveIndex] = useState(0);
-
-  function onClickImage(index) {
-    console.log("click", index);
-  }
+  const activeIndexRef = useRef(0);
 
   useGSAP(() => {
-    const tl = gsap.timeline({ paused: false });
-    timeLineRef.current = tl;
+    isAnimatingRef.current = true;
 
-    elementContainerRef.current.forEach((el, index) => {
-      tl.to(
-        el,
-        {
-          clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-          duration: 1,
-          ease: "power2.out",
-        },
-        index * 0.5,
-      );
+    const tl = gsap.timeline({
+      onComplete: () => {
+        isAnimatingRef.current = false;
+      },
     });
+    tl.set(elementContainerRef.current[0], { zIndex: 3 }).set(
+      elementContainerRef.current[0],
+      {
+        clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+      },
+    );
   }, []);
 
   return (
     <div className={styles.container}>
-      {[...Array(4)].map((_, index) => (
-        <div key={index} className={styles.imageContainer} />
-      ))}
+      <div className={styles.buttonContainer}>
+        {[...Array(4)].map((_, index) => (
+          <TestButtons
+            key={index}
+            isAnimatingRef={isAnimatingRef}
+            index={index}
+            activeIndexRef={activeIndexRef}
+            elementContainerRef={elementContainerRef}
+          />
+        ))}
+      </div>
 
       <div className={styles.images}>
         {imageList.map((image, index) => (
@@ -52,7 +55,6 @@ export default function Index() {
             key={index}
             elementContainerRef={elementContainerRef}
             elementImagesRef={elementImagesRef}
-            onClickImage={onClickImage}
             activeIndex={activeIndex}
             src={image.src}
             index={index}
@@ -67,7 +69,6 @@ export default function Index() {
 function ImageEmlement({
   elementContainerRef,
   elementImagesRef,
-  onClickImage,
   src,
   index,
   alt,
@@ -76,8 +77,6 @@ function ImageEmlement({
     <div
       className={styles.imageContainer}
       ref={(el) => (elementContainerRef.current[index] = el)}
-      onClick={() => onClickImage(index)}
-      // style={{ zIndex: activeIndex === index ? 2 : 1 }}
     >
       <Image
         src={src}
@@ -86,6 +85,57 @@ function ImageEmlement({
         objectFit="cover"
         ref={(el) => (elementImagesRef.current[index] = el)}
       />
+    </div>
+  );
+}
+
+function TestButtons({
+  isAnimatingRef,
+  index,
+  activeIndexRef,
+  elementContainerRef,
+}) {
+  function OnClick() {
+    if (isAnimatingRef.current) return;
+
+    const previous = activeIndexRef.current;
+    const next = index;
+
+    if (previous === next) return;
+
+    isAnimatingRef.current = true;
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        gsap.set(elementContainerRef.current[previous], {
+          clipPath: "polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)",
+        });
+        isAnimatingRef.current = false;
+        activeIndexRef.current = next;
+      },
+    });
+
+    tl.set(elementContainerRef.current[next], { zIndex: 3 })
+      .set(elementContainerRef.current[previous], { zIndex: 1 })
+      .to(elementContainerRef.current[next], {
+        clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+        duration: 0.8,
+        ease: "power2.inOut",
+      })
+      .from(
+        elementContainerRef.current[next],
+        {
+          scale: 1.2,
+          duration: 0.8,
+          ease: "power1.inOut",
+        },
+        "-=0.8",
+      );
+  }
+
+  return (
+    <div className={styles.button} onClick={OnClick}>
+      button {index + 1}
     </div>
   );
 }

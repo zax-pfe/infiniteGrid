@@ -32,4 +32,20 @@
       }
     }
   }
+
+  .buttonContainer {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1rem;
+
+    .button {
+      padding: 0.5rem 1rem;
+      background-color: #000000;
+      color: white;
+      cursor: pointer;
+    }
+  }
 }
