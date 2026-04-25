@@ -1,0 +1,118 @@
+.artwork {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  justify-content: space-between;
+
+  .left {
+    height: 100%;
+    // width: 48%;
+    width: 50%;
+
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // border: solid 1px black;
+    padding: 10vh 5vw;
+
+    .images {
+      //   // height: 80%;
+      //   // width: 80%;
+      //   height: 100%;
+      //   width: 100%;
+      //   position: relative;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+      width: 80%;
+      height: 80%;
+      // clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+      // will-change: clip-path;
+      overflow: hidden;
+
+      .imageContainer {
+        z-index: 1;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        clip-path: polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%);
+        will-change: clip-path;
+        overflow: hidden;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+    }
+  }
+
+  .right {
+    height: 100%;
+    // width: 48%;
+    width: 50%;
+    display: flex;
+    // border: solid 1px black;
+    flex-direction: column;
+    padding: 0 0 10vh 5vw;
+
+    .top {
+      // border: solid 1px black;
+      height: 50%;
+      display: flex;
+      justify-content: end;
+      padding: 5vh 2.5vw;
+      position: relative;
+
+      .closeButton {
+        height: 30px;
+        width: 30px;
+        background-color: rgb(142, 90, 90);
+        transform: translateY(-50%) translateX(50%);
+      }
+    }
+    .bottom {
+      // border: solid 1px black;
+      height: 50%;
+      display: flex;
+      // justify-content: end;
+      flex-direction: column;
+
+      .textContainer {
+        display: flex;
+        justify-content: end;
+
+        flex-direction: column;
+        height: 50%;
+        // border: solid 1px black;
+        .name {
+          font-size: 3vw;
+          font-weight: bold;
+        }
+        .year {
+          font-size: 1vw;
+        }
+      }
+
+      .thumbnailContainer {
+        display: flex;
+        height: 50%;
+        // background-color: lightgrey;
+        gap: 20px;
+        padding: 10px 10px 10px 0;
+
+        .thumbnail {
+          height: 100%;
+          width: 7vw;
+          background-color: white;
+          position: relative;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}

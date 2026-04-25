@@ -12,8 +12,8 @@
     transform: translateX(-50%) translateY(-50%);
     width: 25rem;
     height: 25rem;
-    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
-    will-change: clip-path;
+    // clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+    // will-change: clip-path;
     overflow: hidden;
 
     .imageContainer {

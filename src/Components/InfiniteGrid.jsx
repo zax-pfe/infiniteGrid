@@ -22,8 +22,8 @@ const CONFIG = {
   SCROLL_MULTIPLIER: 0.6,
   COLS: 8,
   ROWS: 3,
-  GAP_X: 500,
-  GAP_Y: 700,
+  GAP_X: 450,
+  GAP_Y: 650,
   IMAGE_HEIGHT: 500,
   IMAGE_WIDTH: 300,
 };
