@@ -5,13 +5,12 @@ import { imageList } from "@/data/data";
 import { useState, useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ReactLenis, useLenis } from "lenis/react";
-import { useStore } from "../store/store.js";
+import { useStore } from "../../store/store.js";
+import Logo from "../Logo/Logo.jsx";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { useGSAP } from "@gsap/react";
-import { Flip } from "gsap/Flip";
-gsap.registerPlugin(Flip);
 
-// InfiniteGrid.jsx
 function mod(n, m) {
   return ((n % m) + m) % m;
 }
@@ -20,17 +19,22 @@ const CONFIG = {
   LERP: 0.08,
   OFFSET: 1200,
   SCROLL_MULTIPLIER: 0.6,
-  COLS: 8,
-  ROWS: 3,
-  GAP_X: 450,
-  GAP_Y: 650,
-  IMAGE_HEIGHT: 500,
-  IMAGE_WIDTH: 300,
+  COLS: 12,
+  ROWS: 5,
+  GAP_X: 400,
+  GAP_Y: 500,
+  IMAGE_HEIGHT: 350,
+  IMAGE_WIDTH: 250,
 };
 
-export default function InfiniteGrid() {
-  const [imageClicked, setImageClicked] = useState(null);
+const totalSlots = CONFIG.COLS * CONFIG.ROWS;
 
+const extendedImageList = Array.from(
+  { length: totalSlots },
+  (_, i) => imageList[i % imageList.length],
+);
+
+export default function InfiniteGrid() {
   const canvasDimmensions = useRef({
     width: CONFIG.COLS * CONFIG.GAP_X,
     height: CONFIG.ROWS * CONFIG.GAP_Y,
@@ -46,10 +50,6 @@ export default function InfiniteGrid() {
   const hasDragged = useRef(false);
   const lastMousePosition = useRef({ x: 0, y: 0 });
 
-  // used to know which image is active
-  const activeIndexRef = useRef(null);
-  const activeModalRef = useRef(false);
-
   // used to do the request animation frame.
   const requestRef = useRef();
 
@@ -62,6 +62,8 @@ export default function InfiniteGrid() {
   const elementRef = useRef([]);
   const gridRef = useRef(null);
 
+  const activeItem = useStore((state) => state.activeItem);
+
   // ______________________ PREVENT DEFAULT DRAGGING ______________________//
 
   useEffect(() => {
@@ -73,6 +75,8 @@ export default function InfiniteGrid() {
       window.removeEventListener("dragstart", preventDrag);
     };
   }, []);
+
+  // ______________________ POSITION GENERATION ______________________//
 
   const positions = useRef(
     Array.from({ length: CONFIG.COLS * CONFIG.ROWS }, (_, i) => {
@@ -88,30 +92,13 @@ export default function InfiniteGrid() {
     }),
   );
 
-  // function centerGrid() {
-  //   const gridWidth = canvasDimmensions.current.width;
-  //   const gridHeight = canvasDimmensions.current.height;
-  //   const windowWidth = window.innerWidth;
-  //   const windowHeight = window.innerHeight;
-  //   const centerX = (windowWidth - gridWidth) / 2;
-  //   const centerY = (windowHeight - gridHeight) / 2;
-  //   gsap.set(gridRef.current, { x: centerX, y: centerY });
-  // }
-  // useEffect(() => {
-  //   if (typeof window === "undefined") return;
-  //   const onResize = () => centerGrid();
-  //   centerGrid();
-  //   window.addEventListener("resize", onResize);
-  //   return () => window.removeEventListener("resize", onResize);
-  // }, []);
-
   const lerp = (start, end, t) => start + (end - start) * t;
 
   // ______________________ RAF LOOP ______________________//
 
   useEffect(() => {
     const animate = () => {
-      if (activeIndexRef.current === null && !activeModalRef.current) {
+      if (activeItem === null) {
         for (const [index, el] of elementRef.current.entries()) {
           const pos = positions.current[index];
 
@@ -149,10 +136,6 @@ export default function InfiniteGrid() {
     return () => cancelAnimationFrame(requestRef.current);
   }, []);
 
-  useEffect(() => {
-    console.log(`Image ${imageClicked} clicked`);
-  }, [imageClicked]);
-
   // ______________________ DRAGGING  ______________________//
 
   useEffect(() => {
@@ -161,17 +144,6 @@ export default function InfiniteGrid() {
       gridRef.current?.classList.add(styles.dragging);
       lastMousePosition.current = { x: e.clientX, y: e.clientY };
       hasDragged.current = false;
-
-      // Ya trois log de image clicked -> prevent
-      // if (activeIndexRef.current !== null) {
-      //   if (imageClicked !== activeIndexRef.current) {
-      //     setImageClicked(activeIndexRef.current);
-      //     activeIndexRef.current = null;
-      //   } else {
-      //     setImageClicked(null);
-      //     activeIndexRef.current = null;
-      //   }
-      // }
     };
 
     const handleMouseMove = (e) => {
@@ -180,7 +152,7 @@ export default function InfiniteGrid() {
       var dx = e.clientX - lastMousePosition.current.x;
       var dy = e.clientY - lastMousePosition.current.y;
 
-      if (activeIndexRef.current !== null) {
+      if (activeItem !== null) {
         dx = 0;
         dy = 0;
       }
@@ -214,7 +186,7 @@ export default function InfiniteGrid() {
   // ______________________ SCROLLING ______________________//
 
   useLenis(({ velocity }) => {
-    if (activeIndexRef.current === null) {
+    if (activeItem === null) {
       for (const pos of positions.current) {
         pos.targetY =
           (pos.targetY ?? pos.y) + velocity * CONFIG.SCROLL_MULTIPLIER;
@@ -223,67 +195,21 @@ export default function InfiniteGrid() {
   }, []);
 
   // ______________________ CLICK ANIMATION ______________________//
-  const clickImage = (index) => {
-    activeModalRef.current = true;
-    const el = elementRef.current[index];
-    const { x, y } = el.getBoundingClientRect();
-    console.log(`Element ${index} position: x=${x}, y=${y}`);
-    previousposition.current = { x, y };
-
-    timelineRef.current = gsap.timeline();
-
-    timelineRef.current.to(el, {
-      x: windowSize.current.width / 2 - CONFIG.IMAGE_WIDTH / 2,
-      y: windowSize.current.height / 2 - CONFIG.IMAGE_HEIGHT / 2,
-      scale: 1.8,
-      duration: 0.6,
-      ease: "power3.inOut",
-      zIndex: 1000,
-    });
-
-    timelineRef.current.play();
-  };
-
-  const unclickImage = (index) => {
-    const el = elementRef.current[index];
-    timelineRef.current = gsap.timeline();
-
-    timelineRef.current.to(el, {
-      x: previousposition.current.x,
-      y: previousposition.current.y,
-      scale: 1,
-      duration: 0.6,
-      ease: "power3.inOut",
-    });
-
-    timelineRef.current.play();
-    timelineRef.current.eventCallback("onComplete", () => {
-      activeIndexRef.current = null;
-      elementRef.current[index].style.zIndex = "";
-      activeModalRef.current = false;
-      activeIndexRef.current = null;
-    });
-    previousposition.current = { x: 0, y: 0 };
-  };
 
   return (
     <div className={styles.container}>
-      <div className={styles.close}>X</div>
-      {/* <div className={styles.overlay}>
-        <div className={styles.overlayImage}></div>
-      </div> */}
       <div className={styles.infiniteGrid} ref={gridRef}>
-        {imageList.map((image, index) => {
+        <Logo />
+        {extendedImageList.map((image, index) => {
           return (
             <InfiniteGridElement
-              src={imageList[index].src}
-              alt={imageList[index].alt}
+              src={extendedImageList[index].src}
+              alt={extendedImageList[index].alt}
               index={index}
+              id={extendedImageList[index].id}
               elementRef={elementRef}
-              activeIndexRef={activeIndexRef}
-              activeModalRef={activeModalRef}
-              click={clickImage}
-              closeModal={unclickImage}
+              activeItem={activeItem}
+              z={extendedImageList[index].z}
               hasDragged={hasDragged}
               key={index}
             />
@@ -298,23 +224,22 @@ function InfiniteGridElement({
   src,
   alt,
   index,
+  id,
   elementRef,
-  activeIndexRef,
-  activeModalRef,
-  click,
-  closeModal,
+  z,
   hasDragged,
 }) {
-  function toggleAciveModal() {
-    activeModalRef.current = !activeModalRef.current;
-  }
-
   const setActiveItem = useStore((state) => state.setActiveItem);
 
   return (
     <div
       className={styles.imageContainer}
       ref={(el) => (elementRef.current[index] = el)}
+      style={{
+        width: CONFIG.IMAGE_WIDTH,
+        height: CONFIG.IMAGE_HEIGHT,
+        zIndex: z,
+      }}
     >
       <Image
         src={src}
@@ -327,38 +252,10 @@ function InfiniteGridElement({
         onDragStart={(e) => e.preventDefault()}
         onClick={() => {
           if (hasDragged.current) return;
-          activeIndexRef.current = index;
-          // activeModalRef.current = true;
-          console.log(`Image ${activeIndexRef.current} clicked`);
-          if (activeModalRef.current) {
-            closeModal(index);
-            setActiveItem(null);
-            return;
-          }
-          click(index);
-          // toggleAciveModal();
-          setActiveItem(index);
 
-          // if (activeModalRef.current) {
-          //   closeModal();
-          // }
+          setActiveItem(id);
         }}
       />
     </div>
   );
 }
-
-// Clean tout le code du click qui a été fait.
-// Quand un utilisateur clique sur une image
-// Faire apparaitre le fondu blanc et changer le z index de l'image au max
-// Positionner cette image au centre de l'ecran
-// deactiver le scroll et le drag
-// afficher une croix pour fermer le modal
-// Quand l'utilisateur clique sur la croix
-// remettre l'image à sa position initiale
-// reactiver le scroll et le drag
-
-// quand une image est cliquée, on blouqe le drag et le scroll
-// mais on stocke la position des targets qaund meme et on la met a jour.
-// quand l'utilisatuer clique pour fermer le modal,
-// la grille se deplace suivant ce qui a été scrollé ou drag pendant que le modal était ouvert,

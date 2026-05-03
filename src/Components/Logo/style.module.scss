@@ -1,0 +1,17 @@
+.logoContainer {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  height: 25vh;
+  width: 45vw;
+  z-index: 2;
+  mix-blend-mode: multiply;
+
+  img {
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+    // mix-blend-mode: multiply;
+  }
+}
