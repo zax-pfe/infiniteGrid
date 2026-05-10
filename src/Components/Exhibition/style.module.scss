@@ -1,0 +1,54 @@
+.exhibition {
+  background-color: rgb(255, 255, 255);
+  height: 100vh;
+  width: 100%;
+  padding-top: 20vh;
+  display: flex;
+  flex-direction: column;
+  gap: 20vh;
+
+  .exhibitionElement {
+    // height: 70vh;
+    width: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    // justify-content: center;
+    // align-items: center;
+
+    .exhibitionName {
+      font-size: 3vw;
+      font-family: "Montserrat-Bold", sans-serif;
+      margin-bottom: 10px;
+    }
+
+    .exhibitionImages {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+
+      .exhibitionImage {
+        position: relative;
+        width: 100%;
+        height: 50vh;
+        // object-fit: cover;
+        background-color: rgb(255, 255, 255);
+        overflow: hidden;
+
+        img {
+          // width: 100%;
+          // height: 100%;
+          // object-fit: contain;
+          // object-position: top center;
+
+          width: 100%;
+          height: auto;
+          cursor: pointer;
+
+          user-select: none;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+.navBar {
+  z-index: 9;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 60px;
+  align-items: center;
+  height: 15vh;
+  user-select: none;
+  color: rgb(255, 255, 255);
+  mix-blend-mode: difference;
+  pointer-events: none;
+
+  .navElement {
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    gap: 10px;
+
+    span {
+      font-size: 1.2vw;
+      color: inherit;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background-color: currentColor;
+      border-radius: 50%;
+    }
+
+    .dot_invisible {
+      width: 8px;
+      height: 8px;
+      background-color: transparent;
+      border-radius: 50%;
+    }
+  }
+  .contact {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    // font-family: "Montserrat-ExtraBold", sans-serif;
+    // font-family: "Montserrat-Black", sans-serif;
+
+    span {
+      font-size: 1vw;
+      color: inherit;
+
+      cursor: pointer;
+      pointer-events: auto;
+    }
+  }
+}

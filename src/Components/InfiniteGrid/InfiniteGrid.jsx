@@ -40,11 +40,6 @@ export default function InfiniteGrid() {
     height: CONFIG.ROWS * CONFIG.GAP_Y,
   });
 
-  const windowSize = useRef({
-    width: typeof window !== "undefined" ? window.innerWidth : null,
-    height: typeof window !== "undefined" ? window.innerHeight : null,
-  });
-
   // use to calculate the drag
   const isDragging = useRef(false);
   const hasDragged = useRef(false);
@@ -52,11 +47,6 @@ export default function InfiniteGrid() {
 
   // used to do the request animation frame.
   const requestRef = useRef();
-
-  // used to do the animation on click
-  const timelineRef = useRef();
-  const previousposition = useRef({ x: 0, y: 0 });
-  const overlayRef = useRef(null);
 
   // ref of the images
   const elementRef = useRef([]);
@@ -108,17 +98,11 @@ export default function InfiniteGrid() {
           pos.y = lerp(pos.y, pos.targetY ?? pos.y, CONFIG.LERP);
 
           const moduloX =
-            mod(
-              pos.x + canvasDimmensions.current.width / 2,
-              canvasDimmensions.current.width,
-            ) -
+            mod(pos.x + canvasDimmensions.current.width / 2, canvasDimmensions.current.width) -
             canvasDimmensions.current.width / 2;
 
           const moduloY =
-            mod(
-              pos.y + canvasDimmensions.current.height / 2,
-              canvasDimmensions.current.height,
-            ) -
+            mod(pos.y + canvasDimmensions.current.height / 2, canvasDimmensions.current.height) -
             canvasDimmensions.current.height / 2;
 
           gsap.set(el, {
@@ -188,8 +172,7 @@ export default function InfiniteGrid() {
   useLenis(({ velocity }) => {
     if (activeItem === null) {
       for (const pos of positions.current) {
-        pos.targetY =
-          (pos.targetY ?? pos.y) + velocity * CONFIG.SCROLL_MULTIPLIER;
+        pos.targetY = (pos.targetY ?? pos.y) + velocity * CONFIG.SCROLL_MULTIPLIER;
       }
     }
   }, []);
@@ -220,15 +203,7 @@ export default function InfiniteGrid() {
   );
 }
 
-function InfiniteGridElement({
-  src,
-  alt,
-  index,
-  id,
-  elementRef,
-  z,
-  hasDragged,
-}) {
+function InfiniteGridElement({ src, alt, index, id, elementRef, z, hasDragged }) {
   const setActiveItem = useStore((state) => state.setActiveItem);
 
   return (

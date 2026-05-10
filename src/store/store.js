@@ -7,6 +7,9 @@ export const useStore = create((set) => ({
   screenWidth: typeof window !== "undefined" ? window.innerWidth : null,
   setScreenWidth: (width) => set({ screenWidth: width }),
 
+  // currentPage: "home",
+  // setCurrentPage: (page) => set({ currentPage: page }),
+
   // playerAnimation: "idle",
   // setPlayerAnimation: (animation) => set({ playerAnimation: animation }),
   // cristalPosition: null,

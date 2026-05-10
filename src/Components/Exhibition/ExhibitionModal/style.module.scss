@@ -1,0 +1,12 @@
+.exhibitionModal {
+  background-color: rgb(255, 255, 255);
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  // overflow: hidden;
+  z-index: 1;
+
+  .exhibitionModalElement {
+    position: absolute;
+  }
+}
