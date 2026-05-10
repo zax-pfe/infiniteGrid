@@ -1,9 +1,7 @@
-import React, { use, useLayoutEffect } from "react";
+import React, { useLayoutEffect } from "react";
 import styles from "./style.module.scss";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import gsap from "gsap";
-import { data_exhibition } from "@/data/data_exhibition";
-import { canvas } from "framer-motion/client";
 
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -18,7 +16,7 @@ const CONFIG = {
   GAP_X: 400,
   IMAGE_HEIGHT: 350,
   IMAGE_WIDTH: 250,
-  DISPLAYED_ELEMENTS: 6,
+  DISPLAYED_ELEMENTS: 5,
   ADDED_ELEMENTS: 2,
 };
 
@@ -41,13 +39,21 @@ export default function ExhibitionModal({ exhibition }) {
 
   // ______________________ POSITION GENERATION ______________________//
   useLayoutEffect(() => {
-    pageWidth.current = window.innerWidth;
-    gap.current = pageWidth.current / CONFIG.DISPLAYED_ELEMENTS;
-    console.log("pageWidth", pageWidth.current);
-    canvasDimmensions.current = gap.current * exhibitionExtended.length;
-    positions.current = Array.from({ length: exhibitionExtended.length }, (_, i) => ({
-      x: i * gap.current,
-    }));
+    const updateLayout = () => {
+      pageWidth.current = window.innerWidth;
+      gap.current = pageWidth.current / CONFIG.DISPLAYED_ELEMENTS;
+      canvasDimmensions.current = gap.current * exhibitionExtended.length;
+      positions.current = Array.from({ length: exhibitionExtended.length }, (_, i) => ({
+        x: i * gap.current,
+      }));
+    };
+
+    updateLayout();
+    window.addEventListener("resize", updateLayout);
+
+    return () => {
+      window.removeEventListener("resize", updateLayout);
+    };
   }, [exhibitionExtended.length]);
 
   // useLayoutEffect(() => {}, [exhibitionExtended.length]);
@@ -61,9 +67,7 @@ export default function ExhibitionModal({ exhibition }) {
         const pos = positions.current[index];
         if (!el || !pos) continue;
 
-        const moduloX =
-          mod(pos.x + canvasDimmensions.current / 2, canvasDimmensions.current) -
-          canvasDimmensions.current / 2;
+        const moduloX = mod(pos.x, canvasDimmensions.current);
 
         gsap.set(el, {
           x: moduloX,
