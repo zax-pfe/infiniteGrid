@@ -2,22 +2,16 @@ import React, { useLayoutEffect } from "react";
 import styles from "./style.module.scss";
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
+import Image from "next/image";
 
 function mod(n, m) {
   return ((n % m) + m) % m;
 }
 
 const CONFIG = {
-  LERP: 0.08,
-  OFFSET: 1200,
-  SCROLL_MULTIPLIER: 0.6,
-  COLS: 12,
-  ROWS: 5,
-  GAP_X: 400,
-  IMAGE_HEIGHT: 350,
-  IMAGE_WIDTH: 250,
-  DISPLAYED_ELEMENTS: 5,
+  DISPLAYED_ELEMENTS: 3,
   ADDED_ELEMENTS: 2,
+  LERP: 0.08,
 };
 
 export default function ExhibitionModal({ exhibition }) {
@@ -29,9 +23,12 @@ export default function ExhibitionModal({ exhibition }) {
     (_, i) => exhibition.images[i % exhibition.images.length],
   );
 
+  console.log("exhibitionExtended", exhibitionExtended);
+
   // ref of the images
   const elementRef = useRef([]);
   const pageWidth = useRef(0);
+  const pageCenter = useRef(0);
   const positions = useRef([]);
   const gap = useRef(0);
 
@@ -41,10 +38,12 @@ export default function ExhibitionModal({ exhibition }) {
   useLayoutEffect(() => {
     const updateLayout = () => {
       pageWidth.current = window.innerWidth;
+      pageCenter.current = pageWidth.current / 2;
       gap.current = pageWidth.current / CONFIG.DISPLAYED_ELEMENTS;
       canvasDimmensions.current = gap.current * exhibitionExtended.length;
       positions.current = Array.from({ length: exhibitionExtended.length }, (_, i) => ({
         x: i * gap.current,
+        // x: i * gap.current + pageCenter.current - canvasDimmensions.current / 2,
       }));
     };
 
@@ -59,6 +58,7 @@ export default function ExhibitionModal({ exhibition }) {
   // useLayoutEffect(() => {}, [exhibitionExtended.length]);
 
   // ______________________ RAF LOOP ______________________//
+  const lerp = (start, end, t) => start + (end - start) * t;
 
   useEffect(() => {
     const animate = () => {
@@ -67,12 +67,14 @@ export default function ExhibitionModal({ exhibition }) {
         const pos = positions.current[index];
         if (!el || !pos) continue;
 
-        const moduloX = mod(pos.x, canvasDimmensions.current);
+        pos.x = lerp(pos.x, pos.targetX ?? pos.x, CONFIG.LERP);
+        pos.y = lerp(pos.y, pos.targetY ?? pos.y, CONFIG.LERP);
 
-        gsap.set(el, {
-          x: moduloX,
-          y: 400,
-        });
+        const moduloX =
+          mod(pos.x + canvasDimmensions.current / 2, canvasDimmensions.current) -
+          canvasDimmensions.current / 2;
+
+        gsap.set(el, { x: moduloX + pageCenter.current, y: 400 });
       }
 
       requestRef.current = requestAnimationFrame(animate);
@@ -83,19 +85,51 @@ export default function ExhibitionModal({ exhibition }) {
     return () => cancelAnimationFrame(requestRef.current);
   }, []);
 
+  const handleClick = (index) => {
+    const pos = positions.current[index];
+
+    // Position visuelle de l'élément (même calcul que dans le RAF)
+    const visualX =
+      mod(pos.x + canvasDimmensions.current / 2, canvasDimmensions.current) -
+      canvasDimmensions.current / 2;
+
+    // On veut que visualX + pageCenter soit égal à pageCenter (le centre de l'écran)
+    // Donc diff = -visualX
+    const diff = -visualX;
+
+    for (let i = 0; i < positions.current.length; i++) {
+      const temp = positions.current[i];
+      temp.targetX = (temp.targetX ?? temp.x) + diff;
+    }
+  };
+
   return (
     <div className={styles.exhibitionModal}>
-      {exhibitionExtended.map((_, index) => (
-        <ExhibitionModalElement key={index} index={index} elementRef={elementRef} />
+      {exhibitionExtended.map((image, index) => (
+        <ExhibitionModalElement
+          key={index}
+          index={index}
+          src={image.src}
+          elementRef={elementRef}
+          handleClick={handleClick}
+        />
       ))}
     </div>
   );
 }
 
-function ExhibitionModalElement({ index, elementRef }) {
+function ExhibitionModalElement({ index, src, elementRef, handleClick }) {
+  useEffect(() => {
+    // console.log(" position", elementRef.current.positions);
+  }, []);
+
   return (
-    <div className={styles.exhibitionModalElement} ref={(el) => (elementRef.current[index] = el)}>
-      aaaa
+    <div
+      onClick={() => handleClick(index)}
+      className={styles.exhibitionModalElement}
+      ref={(el) => (elementRef.current[index] = el)}
+    >
+      <Image src={src} alt={`Exhibition image ${index}`} layout="fill" objectFit="cover" />
     </div>
   );
 }

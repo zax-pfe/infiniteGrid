@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "./style.module.scss";
 import Image from "next/image";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
@@ -29,9 +29,54 @@ export default function Index() {
   const [activeIndex, setActiveIndex] = useState(0);
   const setActiveItem = useStore((state) => state.setActiveItem);
   const activeItem = useStore((state) => state.activeItem);
+  const imageRef = useRef(null);
+  const thumbnailRefs = useRef([]);
+
+  const registerThumbnail = useCallback((index, el) => {
+    thumbnailRefs.current[index] = el;
+  }, []);
 
   useEffect(() => {
-    console.log("activeItem changed:", activeItem);
+    if (activeItem === null || !imageRef.current) return;
+
+    // gsap.fromTo(
+    //   imageRef.current,
+    //   {
+    //     clipPath: "polygon(0% 50%, 100% 50%, 100% 60%, 0% 60%)",
+    //   },
+    //   {
+    //     clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+
+    //     duration: 1.6,
+    //     ease: "power4.inOut",
+    //   },
+    // );
+
+    gsap.fromTo(
+      imageRef.current,
+      { opacity: 0 },
+      {
+        opacity: 1,
+        duration: 0.8,
+        // ease: "power3.inOut",
+      },
+    );
+
+    // if (thumbnailRefs.current.length === 0) return;
+
+    // gsap.fromTo(
+    //   thumbnailRefs.current,
+    //   {
+    //     clipPath: "polygon(0% 50%, 100% 50%, 100% 50%, 0% 50%)",
+    //   },
+    //   {
+    //     clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+    //     duration: 0.8,
+    //     ease: "power3.inOut",
+    //     delay: 0.2,
+    //     stagger: 0.1,
+    //   },
+    // );
   }, [activeItem]);
 
   return (
@@ -45,7 +90,7 @@ export default function Index() {
           className={styles.artwork}
         >
           <div className={styles.left}>
-            <div className={styles.imageContainer}>
+            <div className={styles.imageContainer} ref={imageRef}>
               <Image
                 src={data_artwork[activeItem].images[activeIndex].src}
                 alt={data_artwork[activeItem].images[activeIndex].alt}
@@ -56,19 +101,12 @@ export default function Index() {
           </div>
           <div className={styles.right}>
             <div className={styles.top}>
-              <div
-                className={styles.closeButton}
-                onClick={() => setActiveItem(null)}
-              ></div>
+              <div className={styles.closeButton} onClick={() => setActiveItem(null)}></div>
             </div>
             <div className={styles.bottom}>
               <div className={styles.textContainer}>
-                <div className={styles.name}>
-                  {data_artwork[activeItem].title}
-                </div>
-                <div className={styles.year}>
-                  {data_artwork[activeItem].year}
-                </div>
+                <div className={styles.name}>{data_artwork[activeItem].title}</div>
+                <div className={styles.year}>{data_artwork[activeItem].year}</div>
               </div>
               <div className={styles.thumbnailContainer}>
                 {data_artwork[activeItem].images.map((image, index) => (
@@ -79,6 +117,7 @@ export default function Index() {
                     activeIndex={activeIndex}
                     src={image.src}
                     alt={image.alt}
+                    registerThumbnail={registerThumbnail}
                   />
                 ))}
               </div>
@@ -99,7 +138,7 @@ const thumbnail_variants = {
   },
 };
 
-function Thumbnail({ index, setActiveIndex, activeIndex, src, alt }) {
+function Thumbnail({ index, setActiveIndex, activeIndex, src, alt, registerThumbnail }) {
   function OnClick() {
     setActiveIndex(index);
   }
@@ -111,6 +150,7 @@ function Thumbnail({ index, setActiveIndex, activeIndex, src, alt }) {
       animate={index === activeIndex ? "active" : "inactive"}
       variants={thumbnail_variants}
       whileHover="active"
+      ref={(el) => registerThumbnail(index, el)}
     >
       <Image src={src} alt={alt} layout="fill" objectFit="cover" />
     </motion.div>

@@ -23,11 +23,18 @@
       height: 100%;
       width: 100%;
       position: relative;
-
       width: 80%;
       height: 80%;
-
       overflow: hidden;
+
+      // clip-path: polygon(
+      //   0% 100%,
+      //   100% 100%,
+      //   100% 100%,
+      //   0% 100%
+      // ); // Start with the image fully hidden
+      // will-change: clip-path; // Optimize for animation
+      clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
 
       img {
         width: 100%;
@@ -98,6 +105,12 @@
           background-color: white;
           position: relative;
           cursor: pointer;
+          overflow: hidden;
+          // opacity: 0;
+          // clip-path: polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%);
+          clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+
+          will-change: clip-path;
         }
       }
     }

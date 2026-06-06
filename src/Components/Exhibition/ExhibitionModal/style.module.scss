@@ -5,8 +5,11 @@
   position: absolute;
   // overflow: hidden;
   z-index: 1;
+  // transform: translatex(-50%);
 
   .exhibitionModalElement {
     position: absolute;
+    height: 30vh;
+    width: 20vw;
   }
 }
