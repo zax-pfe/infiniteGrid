@@ -8,7 +8,7 @@ import ExhibitionModal from "./ExhibitionModal/ExhibitionModal";
 export default function Exhibition() {
   return (
     <>
-      <ExhibitionModal exhibition={data_exhibition[Object.keys(data_exhibition)[0]]} />
+      {/* <ExhibitionModal exhibition={data_exhibition[Object.keys(data_exhibition)[0]]} /> */}
       <div className={styles.exhibition}>
         {Object.keys(data_exhibition).map((key) => (
           <ExhibitionElement key={key} data={data_exhibition[key]} />
