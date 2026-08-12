@@ -1,23 +1,15 @@
-import React from "react";
-import NavBar from "@/Components/NavBar/NavBar";
-import Inner from "@/Components/layout/Inner";
-import About from "@/Components/About/About";
 import { useRef } from "react";
 import styles from "./page.module.scss";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-export default function Index() {
+export default function StickerPage() {
   const containerRef = useRef(null);
 
   return (
-    <Inner>
-      <NavBar />
-      {/* <About /> */}
-      <div ref={containerRef} className={styles.stickerContainer}>
-        <StickerElement containerRef={containerRef} />
-      </div>
-    </Inner>
+    <div ref={containerRef} className={styles.stickerContainer}>
+      <StickerElement containerRef={containerRef} />
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "./style.module.scss";
 import Image from "next/image";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
@@ -26,11 +26,15 @@ const artwork_variants = {
 };
 
 export default function Index() {
-  const [activeIndex, setActiveIndex] = useState(0);
   const setActiveItem = useStore((state) => state.setActiveItem);
   const activeItem = useStore((state) => state.activeItem);
+  const activeIndex = useStore((state) => state.activeIndex);
+  const setActiveIndex = useStore((state) => state.setActiveIndex);
   const imageRef = useRef(null);
   const thumbnailRefs = useRef([]);
+  const activeArtwork = data_artwork[activeItem];
+  const displayedIndex = activeArtwork?.images[activeIndex] ? activeIndex : 0;
+  const displayedImage = activeArtwork?.images[displayedIndex];
 
   const registerThumbnail = useCallback((index, el) => {
     thumbnailRefs.current[index] = el;
@@ -81,7 +85,7 @@ export default function Index() {
 
   return (
     <AnimatePresence>
-      {activeItem !== null && (
+      {activeItem !== null && activeArtwork && displayedImage && (
         <motion.div
           variants={artwork_variants}
           initial="inactive"
@@ -92,8 +96,8 @@ export default function Index() {
           <div className={styles.left}>
             <div className={styles.imageContainer} ref={imageRef}>
               <Image
-                src={data_artwork[activeItem].images[activeIndex].src}
-                alt={data_artwork[activeItem].images[activeIndex].alt}
+                src={displayedImage.src}
+                alt={displayedImage.alt}
                 layout="fill"
                 objectFit="cover"
               />
@@ -105,16 +109,16 @@ export default function Index() {
             </div>
             <div className={styles.bottom}>
               <div className={styles.textContainer}>
-                <div className={styles.name}>{data_artwork[activeItem].title}</div>
-                <div className={styles.year}>{data_artwork[activeItem].year}</div>
+                <div className={styles.name}>{activeArtwork.title}</div>
+                <div className={styles.year}>{activeArtwork.year}</div>
               </div>
               <div className={styles.thumbnailContainer}>
-                {data_artwork[activeItem].images.map((image, index) => (
+                {activeArtwork.images.map((image, index) => (
                   <Thumbnail
                     key={index}
                     index={index}
                     setActiveIndex={setActiveIndex}
-                    activeIndex={activeIndex}
+                    activeIndex={displayedIndex}
                     src={image.src}
                     alt={image.alt}
                     registerThumbnail={registerThumbnail}

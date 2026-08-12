@@ -2,7 +2,9 @@ import { create } from "zustand";
 
 export const useStore = create((set) => ({
   activeItem: null,
-  setActiveItem: (item) => set({ activeItem: item }),
+  activeIndex: 0,
+  setActiveItem: (item) => set({ activeItem: item, activeIndex: 0 }),
+  setActiveIndex: (index) => set({ activeIndex: index }),
 
   screenWidth: typeof window !== "undefined" ? window.innerWidth : null,
   setScreenWidth: (width) => set({ screenWidth: width }),
